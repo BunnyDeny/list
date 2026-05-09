@@ -1,55 +1,61 @@
-# :link: Linux Kernel Linked List — Userspace Port
+# 🔗 Linux Kernel Linked List — Userspace Port
 
-> :rocket: A **zero-dependency**, **header-only** port of the legendary Linux kernel doubly-linked list for userspace / MCU projects.
-
----
-
-## :package: What is this?
-
-This project extracts the classic Linux kernel `list.h` implementation and makes it fully self-contained.  
-**No kernel headers. No dynamic memory. No bullshit.** Just drop `list.h` into your project and go.
-
-| Feature | Status |
-|---------|--------|
-| :white_check_mark: Doubly-linked list (`struct list_head`) | Ready |
-| :white_check_mark: Hash list (`struct hlist_head` / `hlist_node`) | Ready |
-| :white_check_mark: `container_of` macro | Ready |
-| :white_check_mark: Zero `malloc` / `free` | Guaranteed |
-| :white_check_mark: Zero external dependencies | Only `<stddef.h>` & `<stdbool.h>` |
+> 🚀 零依赖、零动态内存、header-only 的 Linux 内核链表用户空间移植版
 
 ---
 
-## :open_file_folder: File Layout
+## 📦 这是什么？
+
+本项目将 Linux 内核中经典的 `list.h` 链表实现提取出来，改造成**完全自包含**的头文件库：
+
+- 🚫 不需要任何内核头文件
+- 🚫 不需要 `malloc` / `free`
+- ✅ 只需要标准库的 `<stddef.h>` 和 `<stdbool.h>`
+- ✅ 全部操作都是 `static inline`，零函数调用开销
+- 🎯 专为嵌入式 / MCU 场景设计
+
+| 功能 | 状态 |
+|------|------|
+| 🔗 双向循环链表 (`struct list_head`) | ✅ 就绪 |
+| 🔗 哈希链表 (`struct hlist_head` / `hlist_node`) | ✅ 就绪 |
+| 🧲 `container_of` 宏 | ✅ 就绪 |
+| 🛡️ 安全遍历 (`list_for_each_entry_safe`) | ✅ 就绪 |
+| 🚫 零动态内存分配 | ✅ 保证 |
+
+---
+
+## 📁 文件结构
 
 ```text
 .
-├── list.h      # :star: The star of the show — header-only linked list implementation
-├── main.c      # :microscope: Comprehensive test suite (no malloc!)
-├── Makefile    # :gear: Simple build system
-└── README.md   # :memo: You are here
+├── 📄 list.h      ⭐ 主角 — 纯头文件链表实现
+├── 📄 main.c      🧪 完整测试用例（无 malloc！）
+├── 📄 Makefile    ⚙️  简单构建脚本
+└── 📄 README.md   📖 你在看的这个
 ```
 
 ---
 
-## :mag: Deep Dive into `main.c`
+## 🔬 main.c 深度解析
 
-`main.c` is not just a toy example — it's a **battle-tested walkthrough** of every core list operation, written in the style of a real embedded firmware module.
+`main.c` 不是玩具示例，而是一份**覆盖所有核心链表操作**的实战级测试代码，完全采用嵌入式固件风格编写。
 
-### :classical_building: The Data Structure
+### 🏗️ 数据结构
 
 ```c
 struct student {
-    int  id;            // :1234: Student ID
-    char name[16];      // :label: Name
-    int  score;         // :100: Exam score
-    struct list_head list;  // :link: The list node embedded INSIDE the struct
+    int  id;            🔢 学号
+    char name[16];      🏷️ 姓名
+    int  score;         💯 分数
+    struct list_head list;  🔗 嵌入结构体内部的链表节点
 };
 ```
 
-> :bulb: **Key concept**: The list node is **embedded** as a struct member, not pointed to from outside.  
-> This is the kernel's signature design — it eliminates extra allocations and gives us `container_of`.
+> 💡 **核心设计**：链表节点**嵌入**在业务结构体内部，而不是额外分配。这是 Linux 内核的标志性设计，配合 `container_of` 宏可以从节点指针反推业务结构体地址，彻底消灭指针二次分配。
 
-### :card_file_box: Memory Model — Static Array Only!
+---
+
+### 🧱 内存模型 — 纯静态数组
 
 ```c
 struct student students[6] = {
@@ -62,163 +68,162 @@ struct student students[6] = {
 };
 ```
 
-> :zap: **Zero heap usage.** Every node lives inside a statically-allocated array.  
-> Perfect for MCUs where `malloc` is the enemy.
+> ⚡ **零堆内存使用**！所有节点都住在静态数组里。对 MCU 开发者来说，`malloc` 是敌人，静态分配才是朋友。
 
 ---
 
-## :test_tube: The 12 Tests Explained
+## 🧪 12 项测试逐条讲解
 
-### :one: **Test 1 — Tail Add (Queue Behaviour)**
+### 1️⃣ 尾部追加（队列行为）
 ```c
 for (i = 0; i < 5; i++) {
     INIT_LIST_HEAD(&students[i].list);
     list_add_tail(&students[i].list, &head);
 }
 ```
-:arrow_right: Uses `list_add_tail` to append elements in order.  
-:sparkles: Result: `Alice -> Bob -> Charlie -> David -> Eve`
+📌 使用 `list_add_tail` 按顺序追加 5 个学生。  
+✨ 结果：`Alice → Bob → Charlie → David → Eve`
 
 ---
 
-### :two: **Test 2 — Find & Query**
+### 2️⃣ 按 ID 查找（查询）
 ```c
 found = find_by_id(&head, 3);
 ```
-:mag: Walks the list with `list_for_each_entry` and returns the node whose `id == 3`.  
-:bulb: Demonstrates how `container_of` lets us jump from `struct list_head *` back to the full `struct student *`.
+🔍 通过 `list_for_each_entry` 遍历链表，返回 `id == 3` 的节点。  
+🎯 重点展示 `container_of` 的威力：遍历得到的是 `struct list_head *`，宏自动换算成 `struct student *`。
 
 ---
 
-### :three: **Test 3 — Modify In-Place**
+### 3️⃣ 原地修改（改）
 ```c
 found = find_by_id(&head, 2);
 if (found) found->score = 100;
 ```
-:pencil2: Directly mutates the struct fields through the pointer returned by `find_by_id`.  
-:fire: Bob's score is upgraded to **100**.
+✏️ 直接修改查到的结构体字段。  
+🔥 Bob 的分数从 90 提升到 100。
 
 ---
 
-### :four: **Test 4 — Delete Node**
+### 4️⃣ 删除节点（删）
 ```c
 list_del_init(&found->list);
 ```
-:scissors: Cuts Charlie (`ID=3`) out of the list and re-initializes his node so it can be re-used later.  
-:white_check_mark: After deletion: `Alice -> Bob -> David -> Eve`
+✂️ 将 Charlie（`ID=3`）从链表中摘除，并重新初始化他的节点。  
+🛡️ `list_del_init` 让被删节点回到干净状态，可再次被插入。
 
 ---
 
-### :five: **Test 5 — Move to Head**
+### 5️⃣ 移动到头部
 ```c
 list_move(&found->list, &head);
 ```
-:twisted_rightwards_arrows: Plucks David (`ID=4`) from wherever he is and sticks him at the **front** of the list.  
-:arrow_right: Result: `David -> Alice -> Bob -> Eve`
+🔄 把 David（`ID=4`）从当前位置拔出，插到链表最前面。  
+📍 结果：`David → Alice → Bob → Eve`
 
 ---
 
-### :six: **Test 6 — Replace Node**
+### 6️⃣ 替换节点
 ```c
 list_replace(&found->list, &students[5].list);
 ```
-:recycle: Swaps out Alice (`ID=1`) for Frank (`ID=6`) **in-place**, without touching the surrounding links.  
-:bulb: Frank was never in the list before — he was held in reserve inside the static array.
+♻️ 用 Frank（`ID=6`）原地替换 Alice（`ID=1`），不动前后邻居的连接。  
+🎭 Frank 之前一直躺在数组里当替补，现在直接上位！
 
 ---
 
-### :seven: **Test 7 — Empty Check**
+### 7️⃣ 空表检查
 ```c
-list_empty(&head);   // returns false
+list_empty(&head);   // false
 ```
-:ballot_box_with_check: Quick boolean check before cleanup.
+☑️ 一键判断链表是否为空，返回布尔值。
 
 ---
 
-### :eight: **Test 8 — Safe Bulk Delete**
+### 8️⃣ 安全批量删除
 ```c
 list_for_each_entry_safe(pos, n, &head, list) {
     list_del_init(&pos->list);
 }
 ```
-:shield: Uses the `_safe` iterator so we can delete the **current** node without corrupting the loop cursor.  
-:arrow_down: Empties the entire list in one pass.
+🛡️ 使用 `_safe` 版本迭代器，可以在遍历过程中**安全删除当前节点**。  
+🧹 一次性清空整个链表，循环指针不会悬空。
 
 ---
 
-### :nine: **Test 9 — Stack Push (Head Add)**
+### 9️⃣ 头部插入（栈行为）
 ```c
 list_add(&students[0].list, &head);  // Alice
 list_add(&students[2].list, &head);  // Charlie
 ```
-:package: Uses `list_add` (head insertion) which acts like a **LIFO stack**.  
-:arrow_right: Result: `Charlie -> Alice` (Charlie pushed last, so she's on top).
+📚 `list_add` 是头插法， behaves like **LIFO 栈**。  
+📍 结果：`Charlie → Alice`（Charlie 后入，所以在栈顶）
 
 ---
 
-### :keycap_ten: **Test 10 — Singular Check**
+### 🔟 单节点检查
 ```c
-list_is_singular(&head);   // returns true
+list_is_singular(&head);   // true
 ```
-:question: Verifies the list contains **exactly one** node after removing Charlie.  
-Useful for edge-case handling in drivers.
+❓ 验证链表中是否**恰好只剩一个节点**。  
+🎯 常用于驱动代码中的边界条件处理。
 
 ---
 
-### :one::one: **Test 11 — `container_of` Sanity Check**
+### 1️⃣1️⃣ container_of 校验
 ```c
 struct student *s = container_of(node, struct student, list);
 ```
-:alembic: The magic macro! Given only a pointer to the `list` member, it computes the address of the **parent** `struct student`.  
-This is the entire reason kernel-style embedded lists are so elegant.
+🧲 **灵魂宏！** 只给一个指向 `list` 成员的指针，就能算出父结构体 `struct student` 的地址。  
+🔮 这是内核嵌入式链表最优雅的地方，也是为什么不需要额外分配内存。
 
 ---
 
-### :one::two: **Test 12 — Rotate Left**
+### 1️⃣2️⃣ 左旋
 ```c
 list_rotate_left(&head);
 ```
-:arrows_counterclockwise: Moves the first element to the tail, shifting everyone forward by one.  
-:arrow_right: Before: `Alice -> Charlie -> David`  
-:arrow_right: After:  `Charlie -> David -> Alice`
+🔄 把第一个节点搬到尾部，其余节点依次前移一位。  
+📍 前：`Alice → Charlie → David`  
+📍 后：`Charlie → David → Alice`
 
 ---
 
-## :gear: Build & Run
+## ⚙️ 编译与运行
 
 ```bash
-# :hammer: Compile
+# 🔨 编译
 make
 
-# :running_man: Run tests
+# 🏃 运行测试
 make run
 
-# :broom: Clean build artifacts
+# 🧹 清理构建产物
 make clean
 ```
 
-> :bulb: All object files and the binary are tucked away inside the `build/` directory — your project root stays clean.
+> 💡 所有 `.o` 文件和可执行文件都输出到 `build/` 目录，项目根目录保持整洁。
 
 ---
 
-## :robot: Embedded / MCU Friendly Features
+## 🎯 嵌入式 / MCU 友好特性
 
-| Concern | How we handle it |
-|---------|------------------|
-| :no_entry: No `malloc` | Static array only |
-| :no_entry: No `free` | `list_del_init` puts nodes back in a re-usable state |
-| :no_entry: No libc bloat | Only `<stddef.h>` and `<stdbool.h>` required |
-| :zap: Deterministic memory | Every node lives at a fixed address in `.bss` or `.data` |
-| :gear: Compile-time optimisations | All list operations are `static inline` — zero call overhead |
-
----
-
-## :scroll: License
-
-**GPL-2.0**  
-This is a derivative of the Linux kernel source code and inherits its license.  
-See `list.h` and `main.c` SPDX headers for full details.
+| 痛点 | 本方案 |
+|------|--------|
+| 🚫 不想用 `malloc` | 纯静态数组，节点地址编译期确定 |
+| 🚫 不想用 `free` | `list_del_init` 让节点回到可复用状态 |
+| 🚫 怕 libc 膨胀 | 仅需 `<stddef.h>` + `<stdbool.h>` |
+| ⚡ 要求确定性时序 | 全内联函数，无函数调用开销 |
+| 🧠 怕指针搞崩 | 数组越界由编译器保证，链表操作只改 next/prev |
 
 ---
 
-> :star: If this saves you from writing yet another buggy hand-rolled linked list, consider giving it a star!
+## 📜 许可证
+
+**GPL-2.0** 🔒  
+本项目是 Linux 内核源码的衍生作品，继承其许可证。  
+详见 `list.h` 与 `main.c` 头部的 SPDX 声明。
+
+---
+
+> ⭐ 如果这个项目帮你少写了一个手搓链表、少踩了一个内存泄漏的坑，赏颗星星吧！
