@@ -1,0 +1,99 @@
+# Prerequisites
+*.d
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Linker output
+*.ilk
+*.map
+*.exp
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Kernel Module Compile Results
+*.mod*
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+Mkfile.old
+dkms.conf
+
+# debug information files
+*.dwo
+build/
+
+# Keil5 编译中间文件和输出文件
+*.o
+*.d
+*.crf
+*.lnp
+*.axf
+*.htm
+*.map
+*.dep
+*.uvoptx
+*.uvguix.*
+*.uvprojx.bak
+*.uvoptx.bak
+*.scvd
+*.iex
+*.lst
+*.dbgconf
+RTE_Components.h
+
+# 自动生成的工程目录 (假设你设置了输出目录)
+Objects/
+Listings/
+Objects/*.htm
+Objects/*.lnp
+Objects/*.axf
+Objects/*.map
+Objects/*.o
+Objects/*.d
+
+# 调试文件和用户信息
+*.uvguix.*
+*.uvoptx
+*.uvopt
+
+__pycache__/
+*.pyc
+scope_data.csv
+output.csv
+
+# Kconfig generated files
+.config
+.config.old
